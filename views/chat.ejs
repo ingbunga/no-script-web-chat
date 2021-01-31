@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0">
+    <link rel="stylesheet" href="/chat.css">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <% for (let i = messages.length-1; i >= 0; i--) { %>
+            <% const element = messages[i]; %>
+            <% if(i === messages.length-1){ %>
+                <span id="scroll"><%= element %></span>
+            <% } else{ %>
+                <span><%= element %></span>
+            <% } %>
+        <% } %>
+    </div>
+</body>
+</html>
