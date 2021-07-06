@@ -10,9 +10,7 @@
         <iframe src="/chat" id="chat">
         </iframe>
         <form action="/send" method="POST">
-            <label for="username">nickname</label>
-            <input type="text" name="username" id="username" value="<%= username %>"><br>
-            <label for="username">text</label>
+            <input type="hidden" name="username" id="username" value="<%= username %>"><br>
             <input type="text" name="body" id="body" autocomplete="off" autofocus>
             <button type="submit">submit</button>
         </form>

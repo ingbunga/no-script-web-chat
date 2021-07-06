@@ -1,5 +1,4 @@
 const express = require('express');
-const EventEmitter = require('events');
 const cookieParser = require('cookie-parser');
 
 const app = express();
@@ -12,53 +11,59 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser());
 
+
+
 class MessageManager{
-    messageEvent = new EventEmitter();
-    list = [];
-    constructor(){
-        this.messageEvent.setMaxListeners(10000);
+    
+    messageList = [];
+    waitingList = [];
+
+    wait (res) {
+
+        this.waitingList.push( res );
+
     }
-    wait(){
-        return new Promise((resolve, reject) => {
-            function listner(){
-                this.messageEvent.off('new', listner);
-                resolve();
-            }
-            this.messageEvent.on('new', listner.bind(this));
-        })
-    }
-    emit(message){
-        this.list.push(message);
-        if(this.list.length > 100){
+    emit (message) {
+
+        this.messageList.push(message);
+        if (this.messageList.length > 100) {
             this.list.splice(0,1);
         }
-        this.messageEvent.emit('new');
+
+        this.waitingList.forEach(this.send.bind(this));
+        this.waitingList = [];
+
     }
-    send(res){
-        res.cookie('reload', '1', {expires: new Date(Date.now() + 1000)})
+    send (res) {
+
+        res.cookie('reload', '1', {expires: new Date(Date.now() + 1000)});
         res.render('chat', {
-            messages: message.list
-        })
+            messages: this.messageList
+        });
+
     }
 }
 
+
+
 const message = new MessageManager();
 
-app.get('/', (req, res, next) => {
-    const username = req.query.username ? req.query.username : '';
-    res.render('index',{
-        username
-    })
+app.get('/', (req, res) => {
+    res.render('welcome');
 })
 
-app.get('/chat', (req, res, next) => {
+app.get('/main', (req, res, next) => {
+    const username = req.query.username ? req.query.username : '';
+    res.render('index', {
+        username
+    });
+})
+
+app.get('/chat', (req, res) => {
     const afterReload = req.cookies.reload ? true : false
     const afterSend = req.cookies.send ? true : false
     if(afterReload && !afterSend){
-        message.wait()
-        .then(() => {
-            message.send(res);
-        })
+        message.wait(res)
     }
     else{
         res.clearCookie('send');
@@ -66,10 +71,10 @@ app.get('/chat', (req, res, next) => {
     }
 })
 
-app.post('/send', (req, res, next) => {
+app.post('/send', (req, res) => {
     res.cookie('send', '1')
     message.emit(`${req.body.username}: ${req.body.body}`);
-    res.redirect(`/?username=${req.body.username}`);
+    res.redirect(`/main?username=${req.body.username}`);
 })
 
 
